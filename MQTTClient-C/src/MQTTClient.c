@@ -371,7 +371,6 @@ void MQTTRead(void *arg)
    }
 
 exit:
-   printf("mqtt: read thread exiting\n");
    c->isconnected = 0;
    ThreadExit();
 }
