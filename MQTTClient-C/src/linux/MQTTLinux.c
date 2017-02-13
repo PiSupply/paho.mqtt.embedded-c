@@ -264,7 +264,8 @@ int ThreadStarted(Thread *thread)
 
 int ThreadJoin(Thread *thread)
 {
-   int rc = pthread_join(thread->t, NULL);
+   int rc = 0;
+   if (thread->started) pthread_join(thread->t, NULL);
    thread->started = 0;
    return rc;
 }

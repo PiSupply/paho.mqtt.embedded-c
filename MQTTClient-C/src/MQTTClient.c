@@ -77,6 +77,7 @@ void MQTTClientInit(MQTTClient *c, Network *network, unsigned int command_timeou
 #if defined(MQTT_TASK)
    QueueInit(&c->reply);
    MutexInit(&c->write_mutex);
+   c->read_thread.started = 0;
 #endif
 }
 
