@@ -74,6 +74,9 @@ void MQTTClientInit(MQTTClient *c, Network *network, unsigned int command_timeou
    c->defaultMessageHandler = NULL;
    c->next_packetid = 1;
    TimerInit(&c->ping_timer);
+#if defined(__linux__) || defined(__APPLE__)
+   c->ping_time = -1;
+#endif
 #if defined(MQTT_TASK)
    QueueInit(&c->reply);
    MutexInit(&c->write_mutex);
@@ -221,7 +224,12 @@ int keepalive(MQTTClient *c)
          TimerCountdownMS(&timer, c->command_timeout_ms);
          int len = MQTTSerialize_pingreq(c->buf, c->buf_size);
          if (len > 0 && (rc = sendPacket(c, len, &timer)) == SUCCESS) // send the ping packet
+         {
             c->ping_outstanding = 1;
+#if defined(__linux__) || defined(__APPLE__)
+	    gettimeofday(&c->ping_sent, NULL);
+#endif
+	 }
       }
    }
 
@@ -300,6 +308,13 @@ int cycle(MQTTClient *c, Timer *timer)
 
    case PINGRESP:
       c->ping_outstanding = 0;
+#if defined(__linux__) || defined(__APPLE__)
+      {
+	  struct timeval resp_recv;
+          gettimeofday(&resp_recv, NULL);
+	  c->ping_time = ((resp_recv.tv_sec - c->ping_sent.tv_sec) * 1E6) + (resp_recv.tv_usec - c->ping_sent.tv_usec);
+      }
+#endif
       break;
    }
 
@@ -308,6 +323,13 @@ exit:
       rc = packet_type;
    return rc;
 }
+
+#if defined(__linux__) || defined(__APPLE__)
+long MQTTGetPingTime(MQTTClient *c)
+{
+	return c->ping_time;
+}
+#endif
 
 #if !defined(MQTT_TASK)
 int MQTTYield(MQTTClient *c, int timeout_ms)

@@ -26,6 +26,7 @@ extern "C" {
 #define _GNU_SOURCE
 #include <stdio.h>
 #include "linux/MQTTLinux.h"
+#include <sys/time.h>
 #elif defined(__harmony__)
 #include <stdio.h>
 #include "Harmony/MQTTHarmony.h"
@@ -96,6 +97,10 @@ typedef struct MQTTClient
        *readbuf;
    unsigned int keep_alive_interval;
    char ping_outstanding;
+#if defined(__linux__) || defined(__APPLE__)
+   struct timeval ping_sent;
+   long ping_time;
+#endif
    int isconnected;
 
    struct MessageHandlers
@@ -180,6 +185,14 @@ DLLExport int MQTTDisconnect(MQTTClient *client);
  *  @return success code
  */
 DLLExport int MQTTYield(MQTTClient *client, int time);
+#endif
+
+#if defined(__linux__) || defined(__APPLE__)
+/** MQTT Get Ping Time - Get the Return Trip Time of the last PingRequest/PingResponse
+ * @param client - the client object to use
+ * @return RTT in microseconds
+ */
+DLLExport long MQTTGetPingTime(MQTTClient *client);
 #endif
 
 #if defined(__cplusplus)
