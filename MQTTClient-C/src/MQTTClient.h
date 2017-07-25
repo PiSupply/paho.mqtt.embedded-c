@@ -187,6 +187,12 @@ DLLExport int MQTTDisconnect(MQTTClient *client);
 DLLExport int MQTTYield(MQTTClient *client, int time);
 #endif
 
+/** MQTT Send Ping - Send Ping Request Packet
+ *  @param client - the client object to use
+ *  @return success code
+ */
+DLLExport int MQTTSendPing(MQTTClient *c);
+
 #if defined(__linux__) || defined(__APPLE__)
 /** MQTT Get Ping Time - Get the Return Trip Time of the last PingRequest/PingResponse
  * @param client - the client object to use

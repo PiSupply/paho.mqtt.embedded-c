@@ -237,6 +237,28 @@ exit:
    return rc;
 }
 
+int MQTTSendPing(MQTTClient *c)
+{
+   int rc = SUCCESS;
+
+   if (!c->ping_outstanding)
+   {
+      Timer timer;
+      TimerInit(&timer);
+      TimerCountdownMS(&timer, c->command_timeout_ms);
+
+      int len = MQTTSerialize_pingreq(c->buf, c->buf_size);
+      if (len > 0 && (rc = sendPacket(c, len, &timer)) == SUCCESS) // send the ping packet
+      {
+	 c->ping_outstanding = 1;
+#if defined(__linux__) || defined(__APPLE__)
+	 gettimeofday(&c->ping_sent, NULL);
+#endif
+      }
+   }
+   return rc;
+}
+
 int cycle(MQTTClient *c, Timer *timer)
 {
    int rc = readPacket(c, timer);
