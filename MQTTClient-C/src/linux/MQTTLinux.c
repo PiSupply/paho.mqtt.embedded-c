@@ -100,7 +100,7 @@ int linux_write(Network *n, unsigned char *buffer, int len, int timeout_ms)
 
 void NetworkInit(Network *n)
 {
-   n->my_socket = 0;
+   n->my_socket = -1;
    n->mqttread = linux_read;
    n->mqttwrite = linux_write;
 }
@@ -146,14 +146,43 @@ int NetworkConnect(Network *n, char *addr, int port)
       n->my_socket = socket(family, type, 0);
       if (n->my_socket != -1)
          rc = connect(n->my_socket, (struct sockaddr *)&address, sizeof(address));
+      if (rc != 0) {
+         close(n->my_socket);
+	 n->my_socket =-1;
+      }
    }
 
+printf("DEBUG: NetworkConnect %d\n",rc);
    return rc;
 }
 
 void NetworkDisconnect(Network *n)
 {
+printf("DEBUG: NetworkDisconnect\n");
    close(n->my_socket);
+   n->my_socket =-1;
+}
+
+int NetworkCheckConnected(Network *n)
+{
+   struct sockaddr_in addr;
+   socklen_t addr_len = sizeof(addr);
+   int err;
+
+   if (n->my_socket == -1) {
+	return 0;
+   }
+
+   err = getpeername(n->my_socket, (struct sockaddr *) &addr, &addr_len);
+   if (err == -1) {
+	return 0;
+   }
+   return 1;
+}
+
+int NetworkIsConnected(Network *n)
+{
+   return (n->my_socket != -1);
 }
 
 void MutexInit(Mutex *mutex)

@@ -31,6 +31,9 @@ static int sendPacket(MQTTClient *c, int length, Timer *timer)
    int rc = FAILURE,
        sent = 0;
 
+   if (!NetworkIsConnected(c->ipstack)) 
+	return rc;
+
 #if defined(MQTT_TASK)
    MutexLock(&c->write_mutex);
 #endif
