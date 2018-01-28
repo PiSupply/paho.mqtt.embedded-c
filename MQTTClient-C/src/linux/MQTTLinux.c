@@ -152,13 +152,11 @@ int NetworkConnect(Network *n, char *addr, int port)
       }
    }
 
-printf("DEBUG: NetworkConnect %d\n",rc);
    return rc;
 }
 
 void NetworkDisconnect(Network *n)
 {
-printf("DEBUG: NetworkDisconnect\n");
    close(n->my_socket);
    n->my_socket =-1;
 }
