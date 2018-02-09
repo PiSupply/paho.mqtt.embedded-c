@@ -90,9 +90,13 @@ void MQTTClientInit(MQTTClient *c, Network *network, unsigned int command_timeou
 void MQTTClientDestroy(MQTTClient *c)
 {
 #if defined(MQTT_TASK)
+   c->isconnected = 0;
+debug_log("MQTTClientDestroy before ThreadJoin");
    ThreadJoin(&c->read_thread);
+debug_log("MQTTClientDestroy before QueueDestroy");
    QueueDestroy(&c->reply);
 #endif
+debug_log("MQTTClientDestroy done");
 }
 
 static int decodePacket(MQTTClient *c, int *value, int timeout)
