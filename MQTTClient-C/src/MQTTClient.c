@@ -478,6 +478,7 @@ int MQTTConnect(MQTTClient *c, MQTTPacket_connectData *options)
    c->isconnected = 1;
 #if defined(MQTT_TASK)
    ThreadStart(&c->read_thread, &MQTTRead, c);
+debug_log("MQTTConnect: Thread started");
 #endif
 
    if (waitfor(c, CONNACK, &connect_timer) == CONNACK)
@@ -497,7 +498,9 @@ exit:
    {
       c->isconnected = 0;
 #if defined(MQTT_TASK)
+debug_log("MQTTConnect: error, before ThreadJoin");
       ThreadJoin(&c->read_thread);
+debug_log("MQTTConnect: error, after ThreadJoin");
 #endif
    }
 

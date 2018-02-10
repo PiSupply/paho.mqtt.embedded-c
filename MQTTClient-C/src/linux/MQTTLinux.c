@@ -16,6 +16,8 @@
 
 #include "MQTTLinux.h"
 
+#define debug_log(fmt, ...) _debug_log(fmt"\n", ##__VA_ARGS__)
+
 void TimerInit(Timer *timer)
 {
    timer->end_time = (struct timeval){0, 0};
@@ -245,8 +247,11 @@ void QueueInit(Queue *queue)
 
 int QueueDestroy(Queue *queue)
 {
+debug_log("QueueDestroy before MutexDestroy");
    MutexDestroy(&queue->m);
+debug_log("QueueDestroy before ConditionDestroy");
    ConditionDestroy(&queue->c);
+debug_log("QueueDestroy after ConditionDestroy");
    return 0;
 }
 
