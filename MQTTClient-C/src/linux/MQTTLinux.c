@@ -241,8 +241,11 @@ int ConditionDestroy(Condition *condition)
 
 void QueueInit(Queue *queue)
 {
+debug_log("QueueInit before MutexInit");
    MutexInit(&queue->m);
+debug_log("QueueInit before ConditionInit");
    ConditionInit(&queue->c);
+debug_log("QueueInit after ConditionInit");
 }
 
 int QueueDestroy(Queue *queue)
