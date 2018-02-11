@@ -205,23 +205,26 @@ int MutexDestroy(Mutex *mutex)
    return pthread_mutex_destroy(&mutex->m);
 }
 
-void ConditionInit(Condition *condition)
+void SemaphoreInit(Semaphore *sem)
 {
-   pthread_cond_init(&condition->c, NULL);
+   sem_init(&sem->s, 0, 0);
 }
 
-int ConditionWait(Condition *condition, Mutex *mutex)
+int SemaphoreWait(Semaphore *sem)
 {
-   return pthread_cond_wait(&condition->c, &mutex->m);
+   return sem_wait(&sem->s);
 }
 
-int ConditionTimedWait(Condition *condition, Mutex *mutex, Timer *timer)
+int SemaphoreTimedWait(Semaphore *sem, Timer *timer)
 {
+   int rc;
    struct timespec ts;
    ts.tv_sec = timer->end_time.tv_sec;
    ts.tv_nsec = timer->end_time.tv_usec * 1000;
 
-   int rc = pthread_cond_timedwait(&condition->c, &mutex->m, &ts);
+   do {
+       rc = sem_timedwait(&sem->s, &ts);
+   } while (rc == EINTR);
    if (rc == ETIMEDOUT)
       return TIMEOUT;
    if (rc != 0)
@@ -229,59 +232,69 @@ int ConditionTimedWait(Condition *condition, Mutex *mutex, Timer *timer)
    return 0;
 }
 
-int ConditionSignal(Condition *condition)
+int SemaphoreSignal(Semaphore *sem)
 {
-   return pthread_cond_signal(&condition->c);
+   return sem_post(&sem->s);
 }
 
-int ConditionDestroy(Condition *condition)
+int SemaphoreDestroy(Semaphore *sem)
 {
-   return pthread_cond_destroy(&condition->c);
+   return sem_destroy(&sem->s);
 }
 
 void QueueInit(Queue *queue)
 {
 debug_log("QueueInit before MutexInit");
    MutexInit(&queue->m);
-debug_log("QueueInit before ConditionInit");
-   ConditionInit(&queue->c);
-debug_log("QueueInit after ConditionInit");
+debug_log("QueueInit before SemaphoreInit");
+   SemaphoreInit(&queue->s);
+debug_log("QueueInit after SemaphoreInit");
 }
 
 int QueueDestroy(Queue *queue)
 {
 debug_log("QueueDestroy before MutexDestroy");
    MutexDestroy(&queue->m);
-debug_log("QueueDestroy before ConditionDestroy");
-   ConditionDestroy(&queue->c);
-debug_log("QueueDestroy after ConditionDestroy");
+debug_log("QueueDestroy before SemaphoreDestroy");
+   SemaphoreDestroy(&queue->s);
+debug_log("QueueDestroy after SemaphoreDestroy");
    return 0;
 }
 
 int Enqueue(Queue *queue, unsigned short item)
 {
+   int previtem;
+   do {
+	MutexLock(&queue->m);
+        previtem = queue->item;
+   	MutexUnlock(&queue->m);
+	if (previtem != 0) 
+	    SemaphoreWait(&queue->s);
+   } while (previtem != 0);
+
    MutexLock(&queue->m);
-   while (queue->item != 0)
-      ConditionWait(&queue->c, &queue->m);
    queue->item = item;
    MutexUnlock(&queue->m);
-   ConditionSignal(&queue->c);
+   SemaphoreSignal(&queue->s);
    return 0;
 }
 
 int Dequeue(Queue *queue, unsigned short *item, Timer *timer)
 {
-   MutexLock(&queue->m);
    int rc = 0;
-   while (rc == 0 && queue->item == 0)
-      rc = ConditionTimedWait(&queue->c, &queue->m, timer);
-   if (rc == 0)
-   {
-      *item = queue->item;
-      queue->item = 0;
-   }
+
+   do {
+	MutexLock(&queue->m);
+	*item = queue->item;
+        MutexUnlock(&queue->m);
+
+	if (*item == 0) rc = SemaphoreTimedWait(&queue->s, timer);
+   } while (*item == 0 && rc == 0);
+
+   MutexLock(&queue->m);
+   queue->item = 0;
    MutexUnlock(&queue->m);
-   ConditionSignal(&queue->c);
+   SemaphoreSignal(&queue->s);
    return rc;
 }
 

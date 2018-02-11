@@ -95,6 +95,8 @@ debug_log("MQTTClientDestroy before ThreadJoin");
    ThreadJoin(&c->read_thread);
 debug_log("MQTTClientDestroy before QueueDestroy");
    QueueDestroy(&c->reply);
+debug_log("MQTTClientDestroy before MutexDestroy");
+   MutexDestroy(&c->write_mutex);
 #endif
 debug_log("MQTTClientDestroy done");
 }

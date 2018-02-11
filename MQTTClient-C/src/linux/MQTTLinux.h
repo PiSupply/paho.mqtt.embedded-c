@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <semaphore.h>
 #include <pthread.h>
 
 #include <stdlib.h>
@@ -86,21 +87,21 @@ int MutexLock(Mutex *);
 int MutexUnlock(Mutex *);
 int MutexDestroy(Mutex *);
 
-typedef struct Condition
+typedef struct Semaphore
 {
-   pthread_cond_t c;
-} Condition;
+   sem_t s;
+} Semaphore;
 
-void ConditionInit(Condition *);
-int ConditionWait(Condition *, Mutex *);
-int ConditionTimedWait(Condition *, Mutex *, Timer *);
-int ConditionSignal(Condition *);
-int ConditionDestroy(Condition *);
+void SemaphoreInit(Semaphore *);
+int SemaphoreWait(Semaphore *);
+int SemaphoreTimedWait(Semaphore *, Timer *);
+int SemaphoreSignal(Semaphore *);
+int SemaphoreDestroy(Semaphore *);
 
 typedef struct Queue
 {
    unsigned short item;
-   Condition c;
+   Semaphore s;
    Mutex m;
 } Queue;
 
