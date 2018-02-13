@@ -18,8 +18,6 @@
 #if !defined(__MQTT_CLIENT_C_)
 #define __MQTT_CLIENT_C_
 
-#define debug_log(fmt, ...) _debug_log(fmt"\n", ##__VA_ARGS__)
-
 #if defined(__cplusplus)
 extern "C" {
 #endif

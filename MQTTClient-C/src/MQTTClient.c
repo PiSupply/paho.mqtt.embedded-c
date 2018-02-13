@@ -91,14 +91,10 @@ void MQTTClientDestroy(MQTTClient *c)
 {
 #if defined(MQTT_TASK)
    c->isconnected = 0;
-debug_log("MQTTClientDestroy before ThreadJoin");
    ThreadJoin(&c->read_thread);
-debug_log("MQTTClientDestroy before QueueDestroy");
    QueueDestroy(&c->reply);
-debug_log("MQTTClientDestroy before MutexDestroy");
    MutexDestroy(&c->write_mutex);
 #endif
-debug_log("MQTTClientDestroy done");
 }
 
 static int decodePacket(MQTTClient *c, int *value, int timeout)
@@ -480,7 +476,6 @@ int MQTTConnect(MQTTClient *c, MQTTPacket_connectData *options)
    c->isconnected = 1;
 #if defined(MQTT_TASK)
    ThreadStart(&c->read_thread, &MQTTRead, c);
-debug_log("MQTTConnect: Thread started");
 #endif
 
    if (waitfor(c, CONNACK, &connect_timer) == CONNACK)
@@ -500,9 +495,7 @@ exit:
    {
       c->isconnected = 0;
 #if defined(MQTT_TASK)
-debug_log("MQTTConnect: error, before ThreadJoin");
       ThreadJoin(&c->read_thread);
-debug_log("MQTTConnect: error, after ThreadJoin");
 #endif
    }
 
