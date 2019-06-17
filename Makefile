@@ -89,7 +89,7 @@ LDFLAGS_C = -shared -Wl,-soname,lib$(MQTT_EMBED_LIB_C).so.${MAJOR_VERSION}
 
 all: build
 	
-build: | mkdir ${EMBED_MQTTLIB_C_TARGET} ${SYNC_SAMPLES} ${SYNC_TESTS}
+build: | mkdir ${EMBED_MQTTLIB_C_TARGET} 
 
 clean:
 	rm -rf ${blddir}/*
